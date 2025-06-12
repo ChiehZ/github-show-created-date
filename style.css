@@ -1,0 +1,12 @@
+#repo-created-time {
+  list-style: none;
+  margin-right: 16px;
+}
+#repo-created-time svg {
+  vertical-align: text-bottom;
+  margin-right: 4px;
+}
+#repo-created-time span {
+  color: #24292e;
+  font-size: 14px;
+}
