@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub 儲存庫創建時間",
+  "version": "1.0",
+  "description": "在 GitHub 儲存庫頁面顯示創建時間",
+  "permissions": ["activeTab"],
+  "host_permissions": ["https://api.github.com/*", "https://github.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "icons": {
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
