@@ -8,9 +8,11 @@ const repo = path[2];
 // 確認是在儲存庫頁面
 if (owner && repo && !path[3]) {
   // 呼叫 GitHub API 取得創建時間
-  fetch(`https://api.github.com/repos/${owner}/${repo}`)
-    .then((response) => response.json())
-    .then((data) => {
+  async function fetchRepoData() {
+    try {
+      const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
+      const data = await response.json();
+      
       if (data.created_at) {
         const createdDate = new Date(data.created_at).toLocaleDateString("zh-TW", {
           year: "numeric",
@@ -21,8 +23,12 @@ if (owner && repo && !path[3]) {
       } else {
         console.error("無法取得創建時間:", data.message || "未知錯誤");
       }
-    })
-    .catch((error) => console.error("API 請求失敗:", error));
+    } catch (error) {
+      console.error("API 請求失敗:", error);
+    }
+  }
+  
+  fetchRepoData();
 }
 
 // 在 Stars 和 Forks 旁插入創建時間
