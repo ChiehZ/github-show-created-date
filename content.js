@@ -101,42 +101,6 @@ function insertCreatedTimeElements(createdDate) {
   insertCreatedTimeSecond(createdDate);
 }
 
-// 監聽 DOM 變化
-function setupMutationObserver() {
-  const observer = new MutationObserver((mutations) => {
-    const shouldUpdate = mutations.some(mutation => 
-      Array.from(mutation.addedNodes).some(node => 
-        node.nodeType === 1 && (
-          node.matches?.(`${SELECTORS.FORKS_LINK}, ${SELECTORS.PUBLIC_REPO_CONTAINER}`) ||
-          node.querySelector(`${SELECTORS.FORKS_LINK}, ${SELECTORS.PUBLIC_REPO_CONTAINER}`)
-        )
-      )
-    );
-
-    if (shouldUpdate && window.repoCreatedDate) {
-      insertCreatedTimeElements(window.repoCreatedDate);
-    }
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-  return observer;
-}
-
-// 監聽 URL 變化
-function setupUrlChangeListener() {
-  let lastUrl = location.href;
-  setInterval(() => {
-    if (location.href !== lastUrl) {
-      lastUrl = location.href;
-      setTimeout(() => {
-        if (window.repoCreatedDate) {
-          insertCreatedTimeElements(window.repoCreatedDate);
-        }
-      }, 500);
-    }
-  }, 100);
-}
-
 // 獲取倉庫數據
 async function fetchRepoData(owner, repo) {
   try {
@@ -159,11 +123,15 @@ function initExtension() {
   if (!isRepoHomePage()) return;
 
   const { owner, repo } = getRepoInfo();
-  setupMutationObserver();
-  setupUrlChangeListener();
-  fetchRepoData(owner, repo);
+  
+  // 如果已經有快取資料，直接使用
+  if (window.repoCreatedDate) {
+    insertCreatedTimeElements(window.repoCreatedDate);
+  } else {
+    // 否則才發送請求
+    fetchRepoData(owner, repo);
+  }
 }
 
 // 啟動擴展
-document.addEventListener('DOMContentLoaded', initExtension);
-document.addEventListener('pjax:end', initExtension);
+document.addEventListener('turbo:load', initExtension);
