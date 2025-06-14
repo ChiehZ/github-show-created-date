@@ -5,8 +5,9 @@
 #repo-created-time svg {
   vertical-align: text-bottom;
   margin-right: 4px;
+  fill: var(--fgColor-muted, #57606a);
 }
 #repo-created-time span {
-  color: #24292e;
+  color: var(--fgColor-muted, #57606a) !important;
   font-size: 14px;
 }
