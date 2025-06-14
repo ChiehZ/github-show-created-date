@@ -20,6 +20,7 @@ if (owner && repo && !path[3]) {
           day: "numeric",
         });
         insertCreatedTime(createdDate);
+        insertCreatedTimeSecond(createdDate);
       } else {
         console.error("無法取得創建時間:", data.message || "未知錯誤");
       }
@@ -59,4 +60,35 @@ function insertCreatedTime(createdDate) {
   
   // 在 Forks 容器後插入創建時間
   forksContainer.after(createdTimeDiv);
+}
+
+// 在 Public repository 前插入創建時間
+function insertCreatedTimeSecond(createdDate) {
+  // 檢查是否已插入，避免重複
+  if (document.getElementById("repo-created-time-second")) return;
+
+  // 找到 Public repository 的容器
+  const publicRepoContainer = document.querySelector('.mb-2.d-flex.color-fg-muted');
+  if (!publicRepoContainer) {
+    console.error("找不到 Public repository 容器");
+    return;
+  }
+
+  // 創建新的 div 容器
+  const createdTimeDiv = document.createElement("div");
+  createdTimeDiv.id = "repo-created-time-second";
+  createdTimeDiv.className = "mb-2 d-flex color-fg-muted";
+  createdTimeDiv.innerHTML = `
+    <div class="d-flex flex-items-center" style="height: 21px">
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-calendar flex-shrink-0 mr-2">
+        <path d="M4.75 0a.75.75 0 0 1 .75.75V2h5V.75a.75.75 0 0 1 1.5 0V2A2.75 2.75 0 0 1 15 4.75v8.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-8.5A2.75 2.75 0 0 1 3.75 2V.75A.75.75 0 0 1 4.75 0ZM2.5 6v7.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V6Zm1.25-3.5c-.69 0-1.25.56-1.25 1.25V4.5h11V3.75c0-.69-.56-1.25-1.25-1.25Z"></path>
+      </svg>
+      <span class="flex-auto min-width-0 width-fit">
+        Created: <strong>${createdDate}</strong>
+      </span>
+    </div>
+  `;
+  
+  // 在 Public repository 容器前插入創建時間
+  publicRepoContainer.parentNode.insertBefore(createdTimeDiv, publicRepoContainer);
 }
