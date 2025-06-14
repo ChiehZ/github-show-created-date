@@ -7,6 +7,61 @@ const repo = path[2];
 
 // 確認是在儲存庫頁面
 if (owner && repo && !path[3]) {
+  // 儲存創建時間，避免重複呼叫 API
+  let repoCreatedDate = null;
+
+  // 插入創建時間的函數
+  function insertCreatedTimeElements() {
+    if (!repoCreatedDate) return;
+    
+    // 只有當元素不存在時才插入
+    if (!document.getElementById("repo-created-time")) {
+      insertCreatedTime(repoCreatedDate);
+    }
+    
+    if (!document.getElementById("repo-created-time-second")) {
+      insertCreatedTimeSecond(repoCreatedDate);
+    }
+  }
+
+  // 監聽 URL 變化
+  let lastUrl = location.href;
+  setInterval(() => {
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      // 延遲執行以等待頁面更新
+      setTimeout(insertCreatedTimeElements, 500);
+    }
+  }, 100);
+
+  // 監聽 DOM 變化
+  const observer = new MutationObserver((mutations) => {
+    // 檢查是否有新增的節點包含我們感興趣的內容
+    const shouldUpdate = mutations.some(mutation => {
+      return Array.from(mutation.addedNodes).some(node => {
+        if (node.nodeType === 1) { // ELEMENT_NODE
+          return node.matches && (
+            node.matches('.mt-2 a[href$="/forks"]') || 
+            node.matches('.mb-2.d-flex.color-fg-muted') ||
+            node.querySelector('.mt-2 a[href$="/forks"]') ||
+            node.querySelector('.mb-2.d-flex.color-fg-muted')
+          );
+        }
+        return false;
+      });
+    });
+
+    if (shouldUpdate) {
+      insertCreatedTimeElements();
+    }
+  });
+
+  // 開始觀察 document 的變化
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
   // 呼叫 GitHub API 取得創建時間
   async function fetchRepoData() {
     try {
@@ -14,13 +69,12 @@ if (owner && repo && !path[3]) {
       const data = await response.json();
       
       if (data.created_at) {
-        const createdDate = new Date(data.created_at).toLocaleDateString("en-US", {
+        repoCreatedDate = new Date(data.created_at).toLocaleDateString("en-US", {
           year: "numeric",
           month: "long",
           day: "numeric",
         });
-        insertCreatedTime(createdDate);
-        insertCreatedTimeSecond(createdDate);
+        insertCreatedTimeElements();
       } else {
         console.error("無法取得創建時間:", data.message || "未知錯誤");
       }
@@ -84,7 +138,7 @@ function insertCreatedTimeSecond(createdDate) {
         <path d="M4.75 0a.75.75 0 0 1 .75.75V2h5V.75a.75.75 0 0 1 1.5 0V2A2.75 2.75 0 0 1 15 4.75v8.5A2.75 2.75 0 0 1 12.25 16H3.75A2.75 2.75 0 0 1 1 13.25v-8.5A2.75 2.75 0 0 1 3.75 2V.75A.75.75 0 0 1 4.75 0ZM2.5 6v7.25c0 .69.56 1.25 1.25 1.25h8.5c.69 0 1.25-.56 1.25-1.25V6Zm1.25-3.5c-.69 0-1.25.56-1.25 1.25V4.5h11V3.75c0-.69-.56-1.25-1.25-1.25Z"></path>
       </svg>
       <span class="flex-auto min-width-0 width-fit">
-        Created: <strong>${createdDate}</strong>
+        Created: <span class="text-bold color-fg-default">${createdDate}</span>
       </span>
     </div>
   `;
