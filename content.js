@@ -1,6 +1,6 @@
 const browserAPI = typeof chrome !== "undefined" ? chrome : browser;
 
-// 選擇器常數
+// Selector constants
 const SELECTORS = {
   FORKS_LINK: 'div.mt-2 a[href$="/forks"]',
   PUBLIC_REPO_CONTAINER: '.mb-2.d-flex.color-fg-muted',
@@ -8,7 +8,7 @@ const SELECTORS = {
   CREATED_TIME_SECOND: '#repo-created-time-second'
 };
 
-// DOM 元素模板
+// DOM element templates
 const TEMPLATES = {
   createdTime: (date) => `
     <h3 class="sr-only">Repository created on ${date}</h3>
@@ -31,13 +31,13 @@ const TEMPLATES = {
   `
 };
 
-// 從 URL 提取倉庫信息
+// Extract repository info from URL
 function getRepoInfo() {
   const [_, owner, repo] = location.pathname.split('/');
   return { owner, repo };
 }
 
-// 格式化日期
+// Format date
 function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString("en-US", {
     year: "numeric",
@@ -46,14 +46,14 @@ function formatDate(dateString) {
   });
 }
 
-// 檢查是否在倉庫主頁面
+// Check if on repository home page
 function isRepoHomePage() {
   const { owner, repo } = getRepoInfo();
   const pathSegments = location.pathname.split('/').filter(Boolean);
   return owner && repo && pathSegments.length === 2;
 }
 
-// 創建 DOM 元素
+// Create DOM element
 function createElement({ id, className, html }) {
   const element = document.createElement('div');
   if (id) element.id = id;
@@ -62,7 +62,7 @@ function createElement({ id, className, html }) {
   return element;
 }
 
-// 在 Forks 和 Report repository 之間插入創建時間
+// Insert creation time between Forks and Report repository
 function insertCreatedTime(createdDate) {
   if (document.querySelector(SELECTORS.CREATED_TIME)) return;
 
@@ -78,7 +78,7 @@ function insertCreatedTime(createdDate) {
   forksContainer.after(createdTimeDiv);
 }
 
-// 在 Public repository 前插入創建時間
+// Insert creation time before Public repository
 function insertCreatedTimeSecond(createdDate) {
   if (document.querySelector(SELECTORS.CREATED_TIME_SECOND)) return;
 
@@ -94,14 +94,14 @@ function insertCreatedTimeSecond(createdDate) {
   publicRepoContainer.parentNode.insertBefore(createdTimeDiv, publicRepoContainer);
 }
 
-// 插入創建時間元素
+// Insert creation time elements
 function insertCreatedTimeElements(createdDate) {
   if (!createdDate) return;
   insertCreatedTime(createdDate);
   insertCreatedTimeSecond(createdDate);
 }
 
-// 獲取倉庫數據
+// Fetch repository data
 async function fetchRepoData(owner, repo) {
   try {
     const response = await fetch(`https://api.github.com/repos/${owner}/${repo}`);
@@ -111,27 +111,21 @@ async function fetchRepoData(owner, repo) {
       window.repoCreatedDate = formatDate(data.created_at);
       insertCreatedTimeElements(window.repoCreatedDate);
     } else {
-      console.error("無法取得創建時間:", data.message || "未知錯誤");
+      console.error("Failed to get creation time:", data.message || "Unknown error");
     }
   } catch (error) {
-    console.error("API 請求失敗:", error);
+    console.error("API request failed:", error);
   }
 }
 
-// 初始化擴展
+// Initialize extension
 function initExtension() {
   if (!isRepoHomePage()) return;
 
   const { owner, repo } = getRepoInfo();
   
-  // 如果已經有快取資料，直接使用
-  if (window.repoCreatedDate) {
-    insertCreatedTimeElements(window.repoCreatedDate);
-  } else {
-    // 否則才發送請求
-    fetchRepoData(owner, repo);
-  }
+  fetchRepoData(owner, repo);
 }
 
-// 啟動擴展
+// Start extension
 document.addEventListener('turbo:load', initExtension);
